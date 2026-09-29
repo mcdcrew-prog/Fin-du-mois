@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Carnet de formation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --paper:#F3F6FA; --card:#FFFFFF; --ink:#17213A; --muted:#5B6680; --line:#D8DFEA;
+  --rec:#D23F36; --teal:#157A70; --hl:#FFE36A; --photo:#2B63D9; --warn-bg:#FFF4D6;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F141D; --card:#171F2E; --ink:#E6EBF4; --muted:#98A4BB; --line:#283248;
+    --rec:#EF5B50; --teal:#3DB5A6; --hl:rgba(255,222,80,.32); --photo:#6D9BFF; --warn-bg:#2E2814;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F141D; --card:#171F2E; --ink:#E6EBF4; --muted:#98A4BB; --line:#283248;
+  --rec:#EF5B50; --teal:#3DB5A6; --hl:rgba(255,222,80,.32); --photo:#6D9BFF; --warn-bg:#2E2814;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font:16px/1.55 "Instrument Sans","Noto Sans Arabic",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--photo);outline-offset:2px}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px 96px}
+.top{padding:18px 0 6px}
+.brand{font-size:.85rem;color:var(--muted);font-weight:500}
+.title-in{width:100%;border:0;background:transparent;font-size:1.55rem;font-weight:700;letter-spacing:-.01em;padding:2px 0;outline:none}
+.title-in::placeholder{color:var(--muted);opacity:.7}
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{background:none;border:0;padding:12px 12px 10px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--teal)}
+section{padding-top:18px}
+section[hidden]{display:none}
+
+.recbar{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 16px}
+.rec{width:68px;height:68px;border-radius:50%;border:0;background:var(--rec);display:grid;place-items:center;flex:none;position:relative}
+.rec .dot{width:24px;height:24px;border-radius:50%;background:#fff;transition:border-radius .2s,width .2s,height .2s}
+.rec.on .dot{width:22px;height:22px;border-radius:5px}
+.rec.on::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:3px solid var(--rec);opacity:.5;animation:pulse 1.6s ease-out infinite}
+@keyframes pulse{from{transform:scale(.92);opacity:.6}to{transform:scale(1.15);opacity:0}}
+@media (prefers-reduced-motion: reduce){.rec.on::after{animation:none}}
+.clock{font-size:1.6rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.status{color:var(--muted);font-size:.9rem}
+.grow{flex:1;min-width:0}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:9px 14px;font-weight:600}
+.btn.primary{background:var(--teal);border-color:var(--teal);color:#fff}
+.btn.photo{color:var(--photo)}
+.btn.small{padding:6px 10px;font-size:.88rem}
+.btn.danger{color:var(--rec)}
+
+.langs{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 6px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 13px;font-size:.92rem;font-weight:500}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.hint{color:var(--muted);font-size:.9rem;margin:4px 0 14px;max-width:62ch}
+.warn{background:var(--warn-bg);border-radius:12px;padding:12px 14px;font-size:.93rem;margin-bottom:14px}
+
+.transcript{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:4px 16px;min-height:160px}
+.seg{display:grid;grid-template-columns:auto 1fr auto;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);align-items:start}
+.seg:last-child{border-bottom:0}
+.time{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.8rem;padding-top:3px}
+.lg{display:inline-block;font-size:.72rem;font-weight:700;color:var(--teal);border:1px solid currentColor;border-radius:6px;padding:0 5px;margin-inline-end:6px;vertical-align:1px}
+.txt{line-height:1.6}
+.imp .txt,.mark{background:linear-gradient(transparent 55%,var(--hl) 55%);box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.flag{display:block;font-size:.8rem;color:var(--photo);margin-top:3px;font-weight:600}
+.unsure .txt{opacity:.62}
+.unsure-flag{color:var(--muted)}
+.chip.autochip{font-weight:700}
+.chip.autochip[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:#fff}
+.chip.live::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--rec);margin-inline-end:6px;vertical-align:1px}
+.star{background:none;border:0;font-size:1.2rem;color:var(--line);padding:0 4px;line-height:1}
+.star[aria-pressed="true"]{color:#E3A500}
+.interim{color:var(--muted);font-style:italic;padding:8px 2px;min-height:1.6em}
+.empty{padding:26px 4px;color:var(--muted);text-align:center}
+.empty p{margin:0 0 12px}
+.quick{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px}
+.panel h3{margin:0 0 10px;font-size:1rem}
+textarea,.field{width:100%;border:1px solid var(--line);background:var(--paper);border-radius:12px;padding:10px 12px;resize:vertical}
+label.lbl{display:block;font-size:.88rem;color:var(--muted);margin-bottom:4px;font-weight:500}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.item{padding:12px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.item .meta{font-size:.8rem;color:var(--muted);margin-bottom:3px}
+.item img{width:100%;max-width:100%;border-radius:12px;display:block;margin:6px 0}
+.item .field{padding:7px 10px;font-size:.92rem}
+
+.report{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 20px;margin-top:14px}
+.report h2{margin:0 0 6px;font-size:1.45rem;letter-spacing:-.01em}
+.report h3{font-size:1.02rem;margin:22px 0 8px;padding-top:14px;border-top:1px solid var(--line)}
+.report .meta{color:var(--muted);font-size:.92rem;margin:2px 0}
+.report p,.report li{max-width:70ch}
+.report ul,.report ol{padding-inline-start:1.2em;margin:0}
+.report li{margin:5px 0}
+.kw{display:flex;flex-wrap:wrap;gap:6px;list-style:none;padding:0!important}
+.kw li{margin:0;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:3px 9px;font-size:.9rem}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.gallery figure{margin:0}
+.gallery img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;display:block}
+.gallery figcaption{font-size:.82rem;color:var(--muted);margin-top:3px}
+.foot{color:var(--muted);font-size:.82rem;margin-top:22px}
+
+.sess{display:flex;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.sess:last-child{border-bottom:0}
+.sess .name{font-weight:600}
+.sess .sub{font-size:.84rem;color:var(--muted)}
+.sess.current .name::after{content:" (en cours)";color:var(--teal);font-weight:500}
+
+#toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:20;
+  background:var(--ink);color:var(--paper);border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;
+  max-width:min(92vw,520px);box-shadow:0 8px 28px rgba(0,0,0,.25);font-size:.95rem}
+#toast[hidden]{display:none}
+#toast button{background:var(--paper);color:var(--ink);border:0;border-radius:10px;padding:7px 12px;font-weight:700;white-space:nowrap}
+
+@media print{
+  .top,.tabs,#toast,.no-print,section:not(#tab-summary){display:none!important}
+  body{background:#fff;color:#000}
+  .report{border:0;padding:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">Carnet de formation</div>
+    <input id="title" class="title-in" placeholder="Titre de la formation" aria-label="Titre de la formation">
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="listen" aria-selected="true">Écouter</button>
+    <button role="tab" data-tab="notes" aria-selected="false">Notes et photos</button>
+    <button role="tab" data-tab="summary" aria-selected="false">Résumé</button>
+    <button role="tab" data-tab="sessions" aria-selected="false">Séances</button>
+  </nav>
+
+  <!-- ÉCOUTER -->
+  <section id="tab-listen">
+    <div id="support" class="warn" hidden></div>
+    <div class="recbar">
+      <button id="recBtn" class="rec" aria-label="Commencer l'écoute"><span class="dot"></span></button>
+      <div class="grow">
+        <div id="clock" class="clock">00:00</div>
+        <div id="status" class="status">Prêt à écouter</div>
+      </div>
+      <button id="photoBtn" class="btn photo">📷 Photo</button>
+    </div>
+    <div id="langs" class="langs" aria-label="Langue parlée par le formateur"></div>
+    <p class="hint" id="langHint"></p>
+    <div id="transcript" class="transcript"></div>
+    <div id="interim" class="interim" dir="auto"></div>
+    <div class="quick">
+      <button id="markLast" class="btn small">★ Dernière phrase importante</button>
+      <button id="goNote" class="btn small">✎ Écrire une note</button>
+    </div>
+  </section>
+
+  <!-- NOTES -->
+  <section id="tab-notes" hidden>
+    <div class="panel">
+      <h3>Ajouter une note personnelle</h3>
+      <textarea id="noteIn" rows="3" dir="auto" placeholder="Une idée, une question à poser, un exemple…"></textarea>
+      <div class="row">
+        <button id="addNote" class="btn primary">Ajouter la note</button>
+        <button id="photoBtn2" class="btn photo">📷 Prendre une photo</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Tout ce qui compte, dans l'ordre</h3>
+      <div id="notesList"></div>
+    </div>
+  </section>
+
+  <!-- RÉSUMÉ -->
+  <section id="tab-summary" hidden>
+    <div class="panel no-print">
+      <label class="lbl" for="trainer">Formateur</label>
+      <input id="trainer" class="field" placeholder="Nom du formateur">
+      <div class="row">
+        <button id="genBtn" class="btn primary">Générer le résumé</button>
+        <button id="copyBtn" class="btn" hidden>Copier le texte</button>
+        <button id="printBtn" class="btn" hidden>Imprimer / PDF</button>
+      </div>
+    </div>
+    <div id="report"></div>
+  </section>
+
+  <!-- SÉANCES -->
+  <section id="tab-sessions" hidden>
+    <div class="panel">
+      <div class="row" style="margin-top:0">
+        <button id="newSess" class="btn primary">Nouvelle séance</button>
+        <button id="sampleBtn" class="btn">Charger un exemple</button>
+      </div>
+      <div id="sessList" style="margin-top:8px"></div>
+    </div>
+    <div class="panel">
+      <h3>Coller une transcription</h3>
+      <p class="hint" style="margin-top:0">Vous avez déjà le texte d'une formation (sous-titres, enregistrement transcrit) ? Collez-le ici pour obtenir le même résumé.</p>
+      <textarea id="importIn" rows="5" dir="auto" placeholder="Collez le texte ici…"></textarea>
+      <div class="row"><button id="importBtn" class="btn">Ajouter à la séance en cours</button></div>
+    </div>
+  </section>
+</div>
+
+<div id="toast" role="status" aria-live="polite" hidden></div>
+<input type="file" id="photoInput" accept="image/*" capture="environment" hidden>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const LANGS=[
+  {code:'fr-FR',short:'FR',name:'Français',label:'Français'},
+  {code:'ar-MA',short:'Darija',name:'Darija',label:'Darija'},
+  {code:'ar-SA',short:'AR',name:'Arabe',label:'العربية'},
+  {code:'en-US',short:'EN',name:'Anglais',label:'English'},
+  {code:'es-ES',short:'ES',name:'Espagnol',label:'Español'},
+  {code:'de-DE',short:'DE',name:'Allemand',label:'Deutsch'}
+];
+const langOf=c=>LANGS.find(l=>l.code===c)||{code:c,short:(c||'?').slice(0,2).toUpperCase(),name:c,label:c};
+const KEY='carnet-formation-v1';
+
+/* ---------- texte ---------- */
+const norm=s=>(s||'').toLowerCase().replace(/[’`]/g,"'").normalize('NFD').replace(/[\u0300-\u036f\u064B-\u0652\u0640]/g,'').replace(/[أإآ]/g,'ا');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const reEsc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+function fmt(ms){const s=Math.max(0,Math.floor(ms/1000));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return (h?h+':':'')+String(m).padStart(2,'0')+':'+String(x).padStart(2,'0')}
+function dur(ms){const m=Math.round(ms/60000);if(m<1)return 'moins d\'une minute';if(m<60)return m+' min';return Math.floor(m/60)+' h '+String(m%60).padStart(2,'0')}
+function sentence(t){t=t.trim();if(!t)return t;t=t.charAt(0).toUpperCase()+t.slice(1);return /[.!?؟…:]$/.test(t)?t:t+'.'}
+
+const TRIG={
+ imp:['important','importante','tres important','essentiel','essentielle','retenez','retenir','a retenir','retenez bien','a noter','notez','notez bien','attention','crucial','cle','point cle','fondamental','n\'oubliez pas','rappelez-vous','souvenez-vous','en resume','pour resumer','en conclusion','definition','examen','obligatoire','le plus important',
+      'key','key point','remember','note that','crucial','essential','don\'t forget','in summary','to sum up','in conclusion','exam','the most important',
+      'مهم','مهمة','ضروري','انتبهوا','انتباه','تذكروا','ملاحظة','خلاصة','الخلاصة','اساسي','تعريف','امتحان','مهم بزاف','ردو البال','عقلو','حضيو',
+      'clave','recuerden','importante','wichtig','merken sie'],
+ photo:['regardez','voici','ce schema','le schema','ce tableau','le tableau','au tableau','cette slide','la slide','diapositive','diapo','graphique','figure','a l\'ecran','sur l\'ecran','cette image','ce diagramme','la formule','je vous montre','comme vous voyez','vous voyez ici','cette carte','le plan',
+      'look at','this slide','the slide','diagram','chart','on the screen','this table','figure','formula','as you can see','this picture','the board',
+      'شوفو','انظروا','لاحظوا','الجدول','هذا الجدول','الشكل','الصورة','السبورة','الشاشة','المخطط','الرسم',
+      'miren','este grafico','la diapositiva','schauen sie','die folie'],
+ act:['il faut','vous devez','devez','a faire','pour la prochaine','devoir','exercice','a rendre','preparez','n\'oubliez pas de','il est necessaire',
+      'must','should','need to','have to','homework','assignment','prepare',
+      'يجب','لازم','خاصكم','خاص','واجب','تمرين','حضروا',
+      'deben','tienen que','muss','sollten']
+};
+const RX={};for(const k in TRIG){RX[k]=new RegExp('(^|[^\\p{L}\\p{N}])('+TRIG[k].map(w=>reEsc(norm(w))).join('|')+')(?=$|[^\\p{L}\\p{N}])','u')}
+
+const SWRAW={
+ fr:`le la les un une des du de et ou mais donc car que qui ce cette ces est il elle ils elles on nous vous je tu sont avec pour dans sur pas plus tres bien aussi comme tout tous leur votre notre alors voila ici faut chaque au aux ne une sa son ses`,
+ en:`the a an and or but so of to in on at for with is are was were be it this that these those you we they have has not can will should just very also what which who how when there here about your our from`,
+ es:`el la los las un una de del y o que en es por con para se no lo al como mas pero sus le ya este esta son muy`,
+ de:`der die das und ist nicht ein eine zu mit von den dem auf fur ich sie es wir auch sind wie`,
+ ar:`في من على الى عن مع هذا هذه ذلك التي الذي و او ثم لا ما لم لن هو هي هم نحن انا انت كان كانت يكون قد كل بعض هل ان حتى عند غير بين ايضا سوف لكن`,
+ ma:`ديال دابا واش هادي هاد كاين غادي بزاف راه اللي هادا كي شنو علاش فين حيت ماشي بغيت كنقول خاص هادشي والو مزيان`
+};
+const SWS={};for(const k in SWRAW)SWS[k]=new Set(SWRAW[k].split(/\s+/).map(s=>norm(s)));
+const STOP=new Set(`le la les un une des du de d l et ou mais donc or ni car que qu qui quoi dont ce cet cette ces c ca cela ceci il elle ils elles on nous vous je j tu me m te t se s y en a au aux est sont etre avoir ai as avons avez ont ete fait faire fais pour par avec sans sur sous dans entre plus moins tres bien aussi alors comme si ne pas n tout tous toute toutes son sa ses leur leurs mon ma mes ton ta tes notre nos votre vos voila ici la euh bon ben ok oui non peu peut peuvent va vais vont c'est chaque apres avant quand meme autre autres faut aujourd'hui hui aujourd
+the a an and or but so of to in on at for with by from is are was were be been being it its this that these those i you he she we they me him her us them my your our their do does did have has had not no yes can will would should could just very also as if then than there here what which who how when where about into um uh okay like let's get got
+في من على الى عن مع هذا هذه ذلك التي الذي و او ثم لا ما لم لن هو هي هم نحن انا انت كان كانت يكون قد كل بعض هل ان حتى عند غير بين ايضا يعني ديال دابا واش هادي هاد كاين غادي بزاف راه اللي هادا كي
+el los las unos unas del y o en es por con para se no lo al como mas pero sus le ya este esta
+der die das und ist nicht ein eine zu mit von den dem auf fur ich sie es wir`.split(/\s+/).map(norm));
+
+function words(text){return text.toLowerCase().replace(/[^\p{L}\p{N}\s']/gu,' ').split(/[\s']+/).filter(Boolean)}
+
+/* ---------- état ---------- */
+let state=load();
+function load(){try{const r=localStorage.getItem(KEY);if(r){const s=JSON.parse(r);if(s&&Array.isArray(s.sessions))return s}}catch(e){}return {sessions:[],currentId:null,lang:'fr-FR'}}
+let saveTimer;
+function save(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{
+  try{localStorage.setItem(KEY,JSON.stringify(state))}
+  catch(e){try{const light={...state,sessions:state.sessions.map(s=>({...s,photos:s.photos.map(p=>({...p,data:null}))}))};localStorage.setItem(KEY,JSON.stringify(light));toast('Mémoire du navigateur pleine : les photos ne seront pas conservées après fermeture de la page.')}catch(_){}}
+},400)}
+function newSession(){const s={id:'s'+Date.now(),title:'',trainer:'',created:Date.now(),elapsed:0,segments:[],notes:[],photos:[]};state.sessions.unshift(s);state.currentId=s.id;save();return s}
+function cur(){return state.sessions.find(s=>s.id===state.currentId)||newSession()}
+if(!state.lang)state.lang='fr-FR';
+if(state.auto===undefined)state.auto=true;
+if(!Array.isArray(state.cands)||!state.cands.length)state.cands=['fr-FR','ar-MA','en-US'];
+if(state.auto&&!state.cands.includes(state.lang))state.lang=state.cands[0];
+const uid=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+/* ---------- toast ---------- */
+let toastTimer;
+function toast(msg,actionLabel,action){
+  const t=$('#toast');t.innerHTML='<span>'+esc(msg)+'</span>';
+  if(actionLabel){const b=document.createElement('button');b.textContent=actionLabel;b.onclick=()=>{t.hidden=true;action()};t.appendChild(b)}
+  t.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.hidden=true,actionLabel?9000:3500);
+}
+
+/* ---------- écoute ---------- */
+let recording=false,rec=null,runStart=0,wakeLock=null,lastPhotoHint=0,lastPhotoReminder=0,pendingPhotoT=null;
+const now=()=>cur().elapsed+(recording?Date.now()-runStart:0);
+
+function startRec(){
+  const r=new SR();r.lang=state.lang;r.continuous=true;r.interimResults=true;r.maxAlternatives=1;
+  r.onresult=e=>{let interim='';for(let i=e.resultIndex;i<e.results.length;i++){const res=e.results[i];const txt=res[0].transcript.trim();if(res.isFinal){if(txt){if(rec===r)handleFinal(txt,r.lang,res[0].confidence||0);else addSegment(txt,r.lang)}}else interim+=txt+' '}if(rec===r)$('#interim').textContent=interim};
+  r.onerror=e=>{
+    if(e.error==='not-allowed'||e.error==='service-not-allowed'){stopRecording();showWarn('Le micro est bloqué. Autorisez l\'accès au micro pour cette page dans votre navigateur, ou ouvrez le lien directement dans Chrome.')}
+    else if(e.error==='language-not-supported'){toast('Cette langue n\'est pas prise en charge par votre navigateur.')}
+    else if(e.error==='network'){toast('Connexion perdue : la reconnaissance vocale du navigateur a besoin d\'internet.')}
+  };
+  r.onend=()=>{if(recording&&rec===r){setTimeout(()=>{if(recording&&rec===r)startRec()},200)}};
+  rec=r;try{r.start()}catch(_){}
+}
+function startRecording(){
+  if(!SR){showWarn(noSupportMsg);return}
+  recording=true;runStart=Date.now();lastPhotoReminder=now();startRec();updateRecUI();
+  try{navigator.wakeLock&&navigator.wakeLock.request('screen').then(w=>wakeLock=w).catch(()=>{})}catch(_){}
+}
+function stopRecording(){
+  if(!recording)return;const s=cur();s.elapsed+=Date.now()-runStart;recording=false;
+  const r=rec;rec=null;try{r&&r.stop()}catch(_){}
+  $('#interim').textContent='';updateRecUI();save();
+  try{wakeLock&&wakeLock.release()}catch(_){}wakeLock=null;
+}
+function restartRec(){
+  if(!(recording&&rec))return;const old=rec;rec=null;try{old.stop()}catch(_){}
+  setTimeout(()=>{if(recording&&!rec)startRec()},150);
+}
+function setLang(code){state.lang=code;save();renderLangs();updateRecUI();restartRec()}
+
+/* ---------- détection automatique de la langue (règles, sans IA) ---------- */
+let bad=0,probe=null,cooldownUntil=0,lastDetected='';
+const fam=c=>c==='ar-MA'?'ma':c.startsWith('ar')?'ar':c.slice(0,2);
+function arabicRatio(text){const l=(text.match(/\p{L}/gu)||[]).length||1;return (text.match(/[\u0600-\u06FF]/g)||[]).length/l}
+function toks(text){return words(text).map(norm)}
+function ownRatio(tk,code){
+  const f=fam(code);const hit=tk.filter(t=>f==='ar'||f==='ma'?(SWS.ar.has(t)||SWS.ma.has(t)):SWS[f]&&SWS[f].has(t)).length;
+  return hit/(tk.length||1);
+}
+/* Devine la langue du texte reçu, parmi les langues choisies */
+function detectText(text){
+  const tk=toks(text);if(tk.length<3)return null;
+  const ar=arabicRatio(text),cands=state.cands;
+  if(ar>0.5){
+    const arC=cands.filter(c=>c.startsWith('ar'));if(!arC.length)return null;
+    if(arC.length===1)return {lang:arC[0],sure:true};
+    const ma=tk.filter(t=>SWS.ma.has(t)).length,msa=tk.filter(t=>SWS.ar.has(t)&&!SWS.ma.has(t)).length;
+    if(ma>msa&&arC.includes('ar-MA'))return {lang:'ar-MA',sure:ma-msa>=1};
+    if(msa>ma+1&&arC.includes('ar-SA'))return {lang:'ar-SA',sure:true};
+    return null;
+  }
+  if(ar<0.2){
+    const lat=cands.filter(c=>!c.startsWith('ar'));if(!lat.length)return null;
+    const sc=lat.map(c=>({c,n:tk.filter(t=>SWS[fam(c)]&&SWS[fam(c)].has(t)).length})).map(o=>({...o,r:o.n/tk.length})).sort((a,b)=>b.r-a.r);
+    const best=sc[0],second=sc[1]||{r:0};
+    if(best.n>=2&&best.r>=0.15&&best.r>=second.r*1.6+0.03)return {lang:best.c,sure:true};
+  }
+  return null;
+}
+/* Qualité de la transcription dans la langue d'écoute actuelle (0 à 1) */
+function quality(text,code,conf){
+  const tk=toks(text);if(tk.length<3)return 0.6;
+  const ar=arabicRatio(text),isAr=code.startsWith('ar');
+  if(isAr&&ar<0.5)return 0.1;
+  const c=conf>0?conf:0.75;
+  return 0.55*c+0.45*Math.min(1,ownRatio(tk,code)/0.22);
+}
+function switchTo(code){
+  if(code===state.lang)return;state.lang=code;lastDetected=langOf(code).name;
+  save();renderLangs();updateRecUI();restartRec();
+}
+function nextProbe(q){
+  const curL=state.lang;if(!probe)probe={tried:[]};
+  probe.tried.push({lang:curL,q});
+  const rest=state.cands.filter(c=>!probe.tried.some(t=>t.lang===c));
+  bad=0;
+  if(rest.length){switchTo(rest[0]);return}
+  const best=probe.tried.sort((a,b)=>b.q-a.q)[0];probe=null;cooldownUntil=Date.now()+20000;
+  switchTo(best.lang);
+}
+function handleFinal(txt,lang,conf){
+  if(!state.auto||state.cands.length<2){addSegment(txt,lang);return}
+  const d=detectText(txt);
+  if(d&&d.sure&&d.lang!==lang){
+    // Le texte est clairement dans une autre langue : on l'étiquette et on bascule
+    addSegment(txt,d.lang);bad=0;probe=null;switchTo(d.lang);return;
+  }
+  const q=quality(txt,lang,conf);
+  const unsure=q<0.4&&toks(txt).length>=3;
+  addSegment(txt,lang,undefined,false,unsure);
+  if(!unsure){bad=0;probe=null;return}
+  if(probe){nextProbe(q);return}
+  if(Date.now()<cooldownUntil)return;
+  bad++;
+  if(bad>=2)nextProbe(q);
+}
+function updateRecUI(){
+  const b=$('#recBtn');b.classList.toggle('on',recording);
+  b.setAttribute('aria-label',recording?'Mettre l\'écoute en pause':'Commencer l\'écoute');
+  $('#status').textContent=recording?(state.auto&&state.cands.length>1?'Détection automatique, langue actuelle : '+langOf(state.lang).name:'Écoute en cours en '+langOf(state.lang).name):(cur().elapsed>0?'En pause, touchez pour reprendre':'Prêt à écouter');
+  $('#clock').textContent=fmt(now());
+}
+setInterval(()=>{
+  $('#clock').textContent=fmt(now());
+  if(recording&&now()-lastPhotoReminder>15*60000){
+    const ph=cur().photos;const lastT=ph.length?ph[ph.length-1].t:0;
+    lastPhotoReminder=now();
+    if(now()-lastT>15*60000)suggestPhoto(null,'Pas de photo depuis 15 min : pensez à photographier le tableau ou la slide.');
+  }
+},500);
+
+function classify(text){const n=norm(text);return {imp:RX.imp.test(n),photo:RX.photo.test(n),act:RX.act.test(n)}}
+function addSegment(text,lang,t,quiet,unsure){
+  const s=cur();const c=classify(text);
+  const seg={id:uid('g'),t:t??now(),lang,text,imp:c.imp,photo:c.photo,act:c.act,unsure:!!unsure};
+  s.segments.push(seg);
+  if(!quiet){renderSegment(seg);if(seg.photo)suggestPhoto(seg);else if(seg.imp)toast('★ Point important noté');save()}
+}
+function suggestPhoto(seg,msg){
+  if(Date.now()-lastPhotoHint<40000)return;lastPhotoHint=Date.now();
+  pendingPhotoT=seg?seg.t:now();
+  try{navigator.vibrate&&navigator.vibrate([60,60,60])}catch(_){}
+  toast(msg||'📸 Le formateur montre quelque chose : c\'est le moment de prendre une photo.','Prendre la photo',()=>$('#photoInput').click());
+}
+
+/* ---------- photos ---------- */
+function takePhoto(){pendingPhotoT=now();$('#photoInput').click()}
+$('#photoInput').addEventListener('change',e=>{
+  const f=e.target.files&&e.target.files[0];if(!f)return;
+  const t=pendingPhotoT??now();pendingPhotoT=null;
+  const img=new Image();const url=URL.createObjectURL(f);
+  img.onload=()=>{
+    const max=1100,sc=Math.min(1,max/Math.max(img.width,img.height));
+    const c=document.createElement('canvas');c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);
+    cur().photos.push({id:uid('p'),t,data:c.toDataURL('image/jpeg',.62),caption:''});
+    save();renderNotes();toast('Photo ajoutée à vos notes à '+fmt(t));
+  };
+  img.onerror=()=>toast('Cette image n\'a pas pu être lue.');
+  img.src=url;e.target.value='';
+});
+
+/* ---------- rendu écoute ---------- */
+function renderLangs(){
+  const a=state.auto;
+  $('#langs').innerHTML=`<button class="chip autochip" data-auto aria-pressed="${a}">Automatique</button>`+
+    LANGS.map(l=>{const on=a?state.cands.includes(l.code):l.code===state.lang;const live=a&&l.code===state.lang;
+      return `<button class="chip${live?' live':''}" data-lang="${l.code}" aria-pressed="${on}">${esc(l.label)}</button>`}).join('');
+  $('#langHint').textContent=a
+    ?'Mode automatique : sélectionnez une seule fois les langues de la formation. Le carnet repère quand le formateur passe de l\'une à l\'autre et bascule tout seul (le point rouge montre la langue écoutée).'
+    :'Mode manuel : touchez la langue que parle le formateur, l\'écoute continue sans coupure.';
+}
+$('#langs').addEventListener('click',e=>{
+  if(e.target.closest('[data-auto]')){
+    state.auto=!state.auto;if(state.auto&&!state.cands.includes(state.lang))state.cands.push(state.lang);
+    bad=0;probe=null;save();renderLangs();updateRecUI();return;
+  }
+  const b=e.target.closest('[data-lang]');if(!b)return;const code=b.dataset.lang;
+  if(!state.auto){setLang(code);return}
+  if(state.cands.includes(code)){
+    if(state.cands.length===1){toast('Gardez au moins une langue.');return}
+    state.cands=state.cands.filter(c=>c!==code);
+    if(state.lang===code){state.lang=state.cands[0];restartRec()}
+  }else state.cands.push(code);
+  bad=0;probe=null;save();renderLangs();updateRecUI();
+});
+
+function segHTML(seg){
+  return `<span class="time">${fmt(seg.t)}</span><div><span class="lg">${esc(langOf(seg.lang).short)}</span><span class="txt" dir="auto">${esc(seg.text)}</span>${seg.photo?'<span class="flag">📷 Moment visuel</span>':''}${seg.unsure?'<span class="flag unsure-flag">Transcription incertaine</span>':''}</div><button class="star" data-star="${seg.id}" aria-pressed="${seg.imp}" aria-label="Marquer comme important">★</button>`;
+}
+function renderSegment(seg){
+  const box=$('#transcript');const em=box.querySelector('.empty');if(em)em.remove();
+  const d=document.createElement('div');d.className='seg'+(seg.imp?' imp':'')+(seg.unsure?' unsure':'');d.dataset.id=seg.id;d.innerHTML=segHTML(seg);box.appendChild(d);
+  if(recording)$('#interim').scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+function renderTranscript(){
+  const box=$('#transcript');const segs=cur().segments;
+  if(!segs.length){box.innerHTML=`<div class="empty"><p>Touchez le bouton rouge au début de la formation. Les phrases importantes seront surlignées automatiquement.</p><button class="btn small" id="emptySample">Voir un exemple</button></div>`;const b=$('#emptySample');if(b)b.onclick=loadSample;return}
+  box.innerHTML=segs.map(g=>`<div class="seg${g.imp?' imp':''}${g.unsure?' unsure':''}" data-id="${g.id}">${segHTML(g)}</div>`).join('');
+}
+$('#transcript').addEventListener('click',e=>{
+  const b=e.target.closest('[data-star]');if(!b)return;
+  const g=cur().segments.find(x=>x.id===b.dataset.star);if(!g)return;
+  g.imp=!g.imp;b.setAttribute('aria-pressed',g.imp);b.closest('.seg').classList.toggle('imp',g.imp);save();
+});
+$('#markLast').onclick=()=>{const segs=cur().segments;if(!segs.length){toast('Aucune phrase pour le moment.');return}const g=segs[segs.length-1];g.imp=true;renderTranscript();save();toast('★ Marquée comme importante')};
+$('#goNote').onclick=()=>{showTab('notes');$('#noteIn').focus()};
+
+/* ---------- notes ---------- */
+function renderNotes(){
+  const s=cur();
+  const items=[
+    ...s.segments.filter(g=>g.imp).map(g=>({k:'imp',t:g.t,g})),
+    ...s.notes.map(n=>({k:'note',t:n.t,n})),
+    ...s.photos.map(p=>({k:'photo',t:p.t,p}))
+  ].sort((a,b)=>a.t-b.t);
+  const box=$('#notesList');
+  if(!items.length){box.innerHTML='<div class="empty"><p>Rien pour l\'instant. Les phrases importantes, vos notes et vos photos apparaîtront ici.</p></div>';return}
+  box.innerHTML=items.map(it=>{
+    if(it.k==='imp')return `<div class="item"><div class="meta">${fmt(it.t)}, dit par le formateur (${esc(langOf(it.g.lang).name)})</div><span class="mark" dir="auto">${esc(it.g.text)}</span></div>`;
+    if(it.k==='note')return `<div class="item"><div class="meta">${fmt(it.t)}, ma note <button class="btn small danger" data-delnote="${it.n.id}" style="margin-inline-start:6px">Supprimer</button></div><div dir="auto">${esc(it.n.text)}</div></div>`;
+    return `<div class="item"><div class="meta">${fmt(it.t)}, photo <button class="btn small danger" data-delphoto="${it.p.id}" style="margin-inline-start:6px">Supprimer</button></div>${it.p.data?`<img src="${it.p.data}" alt="Photo prise à ${fmt(it.t)}">`:'<p class="hint">Photo non conservée (mémoire pleine).</p>'}<input class="field" dir="auto" data-cap="${it.p.id}" value="${esc(it.p.caption)}" placeholder="Légende : que montre cette photo ?"></div>`;
+  }).join('');
+}
+$('#notesList').addEventListener('click',e=>{
+  const s=cur();let b;
+  if(b=e.target.closest('[data-delnote]')){s.notes=s.notes.filter(n=>n.id!==b.dataset.delnote);save();renderNotes()}
+  if(b=e.target.closest('[data-delphoto]')){s.photos=s.photos.filter(p=>p.id!==b.dataset.delphoto);save();renderNotes()}
+});
+$('#notesList').addEventListener('input',e=>{const i=e.target.closest('[data-cap]');if(!i)return;const p=cur().photos.find(x=>x.id===i.dataset.cap);if(p){p.caption=i.value;save()}});
+$('#addNote').onclick=()=>{const v=$('#noteIn').value.trim();if(!v)return;cur().notes.push({id:uid('n'),t:now(),text:v});$('#noteIn').value='';save();renderNotes();toast('Note ajoutée')};
+$('#photoBtn').onclick=takePhoto;$('#photoBtn2').onclick=takePhoto;
+
+/* ---------- résumé (algorithme local, sans IA) ---------- */
+function build(s){
+  if(!s.segments.length&&!s.notes.length&&!s.photos.length)return null;
+  const sents=[];
+  s.segments.forEach(g=>g.text.split(/(?<=[.!?؟…])\s+/).forEach(x=>{x=x.trim();if(x)sents.push({text:x,t:g.t,imp:g.imp,act:g.act,lang:g.lang,unsure:g.unsure})}));
+  const freq={},display={};let totalWords=0;const langWords={};
+  sents.forEach(x=>{
+    const w=words(x.text);x.len=w.length;totalWords+=w.length;langWords[x.lang]=(langWords[x.lang]||0)+w.length;
+    x.content=[];w.forEach(o=>{const k=norm(o);if(k.length>2&&!STOP.has(k)&&!/^\d+$/.test(k)){x.content.push(k);freq[k]=(freq[k]||0)+1;if(!display[k])display[k]=o}});
+  });
+  const max=Math.max(1,...Object.values(freq));
+  sents.forEach((x,i)=>{x.i=i;if(x.len<4){x.score=0;return}const uniq=[...new Set(x.content)];x.score=uniq.reduce((a,w)=>a+freq[w]/max,0)/Math.sqrt(x.len);if(x.imp)x.score*=1.6;if(x.act)x.score*=1.2;if(x.unsure)x.score*=0.3});
+  const k=Math.min(8,Math.max(3,Math.round(sents.length*.2)));
+  const top=sents.filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,k).sort((a,b)=>a.i-b.i);
+  const kw=Object.entries(freq).filter(e=>e[1]>1).sort((a,b)=>b[1]-a[1]).slice(0,10).map(e=>display[e[0]]);
+  const D=Math.max(s.elapsed,...s.segments.map(g=>g.t),0);
+  // déroulé
+  const phases=[];
+  if(s.segments.length>=10){
+    const n=D>20*60000?4:D>5*60000?3:2;const step=D/n||1;
+    for(let p=0;p<n;p++){
+      const a=p*step,b=(p+1)*step;const lf={};
+      sents.filter(x=>x.t>=a&&(x.t<b||p===n-1)).forEach(x=>x.content.forEach(w=>lf[w]=(lf[w]||0)+freq[w]));
+      const tops=Object.entries(lf).sort((q,r)=>r[1]-q[1]).slice(0,3).map(e=>display[e[0]]);
+      if(tops.length)phases.push({a,b,tops});
+    }
+  }
+  const seen=new Set();const uniq=arr=>arr.filter(t=>{const kk=norm(t);if(seen.has(kk))return false;seen.add(kk);return true});
+  const keyPoints=uniq(s.segments.filter(g=>g.imp).map(g=>g.text));
+  const actions=uniq(sents.filter(x=>x.act).map(x=>x.text)).slice(0,8);
+  const missing=s.segments.filter(g=>g.photo&&!s.photos.some(p=>Math.abs(p.t-g.t)<90000));
+  const langs=Object.entries(langWords).sort((a,b)=>b[1]-a[1]).map(([c,n])=>langOf(c).name+' '+Math.round(n*100/Math.max(1,totalWords))+' %');
+  return {s,top,kw,phases,keyPoints,actions,missing,langs,D,totalWords,count:sents.length};
+}
+function reportHTML(r){
+  const s=r.s,date=new Date(s.created).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const L=a=>a.map(x=>`<li dir="auto">${esc(sentence(x))}</li>`).join('');
+  let h=`<article class="report"><h2 dir="auto">${esc(s.title||'Formation sans titre')}</h2>`;
+  if(s.trainer)h+=`<p class="meta">Formateur : ${esc(s.trainer)}</p>`;
+  h+=`<p class="meta">${esc(date)}, durée ${esc(dur(r.D))}</p>`;
+  if(r.langs.length)h+=`<p class="meta">Langues utilisées : ${esc(r.langs.join(', '))}</p>`;
+  if(r.top.length)h+=`<h3>Résumé</h3><p dir="auto">${r.top.map(x=>esc(sentence(x.text))).join(' ')}</p>`;
+  if(r.kw.length)h+=`<h3>Mots-clés</h3><ul class="kw">${r.kw.map(w=>`<li dir="auto">${esc(w)}</li>`).join('')}</ul>`;
+  if(r.phases.length)h+=`<h3>Déroulé de la séance</h3><ol>${r.phases.map(p=>`<li>De ${fmt(p.a)} à ${fmt(p.b)} : <span dir="auto">${esc(p.tops.join(', '))}</span></li>`).join('')}</ol>`;
+  if(r.keyPoints.length)h+=`<h3>Points clés à retenir</h3><ul>${L(r.keyPoints)}</ul>`;
+  if(s.notes.length)h+=`<h3>Mes notes</h3><ul>${L(s.notes.map(n=>n.text))}</ul>`;
+  if(r.actions.length)h+=`<h3>Consignes et actions à faire</h3><ul>${L(r.actions)}</ul>`;
+  const ph=s.photos.filter(p=>p.data);
+  if(ph.length||r.missing.length){
+    h+=`<h3>Supports visuels</h3>`;
+    if(ph.length)h+=`<div class="gallery">${ph.map(p=>`<figure><img src="${p.data}" alt="${esc(p.caption||'Photo')}"><figcaption>${fmt(p.t)}${p.caption?', '+esc(p.caption):''}</figcaption></figure>`).join('')}</div>`;
+    if(r.missing.length)h+=`<p class="meta" style="margin-top:10px">Moments visuels sans photo, à récupérer auprès du formateur :</p><ul>${r.missing.map(g=>`<li dir="auto">${fmt(g.t)} : ${esc(sentence(g.text))}</li>`).join('')}</ul>`;
+  }
+  h+=`<p class="foot">Résumé généré sur votre appareil, sans IA, à partir de ${r.count} phrases (${r.totalWords} mots).</p></article>`;
+  return h;
+}
+function reportText(r){
+  const s=r.s,out=[];const date=new Date(s.created).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+  out.push((s.title||'Formation sans titre').toUpperCase());
+  if(s.trainer)out.push('Formateur : '+s.trainer);
+  out.push(date+', durée '+dur(r.D));
+  if(r.langs.length)out.push('Langues : '+r.langs.join(', '));
+  const sec=(t,arr)=>{if(arr.length){out.push('',t);arr.forEach(x=>out.push('- '+x))}};
+  if(r.top.length){out.push('','RÉSUMÉ',r.top.map(x=>sentence(x.text)).join(' '))}
+  if(r.kw.length){out.push('','MOTS-CLÉS',r.kw.join(', '))}
+  sec('DÉROULÉ',r.phases.map(p=>`${fmt(p.a)} à ${fmt(p.b)} : ${p.tops.join(', ')}`));
+  sec('POINTS CLÉS À RETENIR',r.keyPoints.map(sentence));
+  sec('MES NOTES',s.notes.map(n=>sentence(n.text)));
+  sec('CONSIGNES ET ACTIONS',r.actions.map(sentence));
+  sec('PHOTOS',s.photos.map(p=>fmt(p.t)+(p.caption?' : '+p.caption:'')));
+  sec('MOMENTS VISUELS SANS PHOTO',r.missing.map(g=>fmt(g.t)+' : '+sentence(g.text)));
+  return out.join('\n');
+}
+let lastReport=null;
+$('#genBtn').onclick=()=>{
+  const r=build(cur());
+  if(!r){$('#report').innerHTML='<div class="report"><p>Il n\'y a encore rien à résumer. Lancez l\'écoute dans l\'onglet Écouter, ou chargez un exemple dans Séances.</p></div>';$('#copyBtn').hidden=$('#printBtn').hidden=true;return}
+  lastReport=r;$('#report').innerHTML=reportHTML(r);$('#copyBtn').hidden=$('#printBtn').hidden=false;
+};
+$('#copyBtn').onclick=()=>{
+  if(!lastReport)return;const txt=reportText(lastReport);
+  const fallback=()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Résumé copié')}catch(_){toast('Copie impossible sur ce navigateur')}ta.remove()};
+  if(navigator.clipboard)navigator.clipboard.writeText(txt).then(()=>toast('Résumé copié, collez-le dans un e-mail ou un document')).catch(fallback);else fallback();
+};
+$('#printBtn').onclick=()=>{try{window.print()}catch(_){toast('Impression indisponible ici. Copiez le texte à la place.')}};
+
+/* ---------- séances ---------- */
+let delArm=null;
+function renderSessions(){
+  const box=$('#sessList');
+  if(!state.sessions.length){box.innerHTML='<p class="hint">Aucune séance enregistrée.</p>';return}
+  box.innerHTML=state.sessions.map(s=>`<div class="sess${s.id===state.currentId?' current':''}"><div class="grow"><div class="name" dir="auto">${esc(s.title||'Formation sans titre')}</div><div class="sub">${new Date(s.created).toLocaleDateString('fr-FR')}, ${s.segments.length} phrases, ${s.photos.length} photos</div></div>${s.id!==state.currentId?`<button class="btn small" data-open="${s.id}">Ouvrir</button>`:''}<button class="btn small danger" data-del="${s.id}">${delArm===s.id?'Confirmer':'Supprimer'}</button></div>`).join('');
+}
+$('#sessList').addEventListener('click',e=>{
+  let b;
+  if(b=e.target.closest('[data-open]')){stopRecording();state.currentId=b.dataset.open;save();refreshAll();showTab('listen')}
+  if(b=e.target.closest('[data-del]')){
+    const id=b.dataset.del;if(delArm!==id){delArm=id;renderSessions();return}
+    if(id===state.currentId)stopRecording();
+    state.sessions=state.sessions.filter(s=>s.id!==id);delArm=null;
+    if(!state.sessions.find(s=>s.id===state.currentId)){state.currentId=state.sessions[0]?.id||null}
+    cur();save();refreshAll();
+  }
+});
+$('#newSess').onclick=()=>{stopRecording();newSession();refreshAll();showTab('listen');$('#title').focus()};
+$('#importBtn').onclick=()=>{
+  const v=$('#importIn').value.trim();if(!v)return;
+  const parts=v.split(/\n+|(?<=[.!?؟])\s+/).map(x=>x.trim()).filter(Boolean);
+  const s=cur();let t=s.segments.length?s.segments[s.segments.length-1].t:0;
+  parts.forEach(p=>{t+=8000;addSegment(p,/[\u0600-\u06FF]/.test(p)?'ar-SA':state.lang,t,true)});
+  s.elapsed=Math.max(s.elapsed,t);$('#importIn').value='';save();refreshAll();toast(parts.length+' phrases ajoutées');
+};
+function loadSample(){
+  stopRecording();const s=newSession();s.title='Initiation à la méthode Scrum';s.trainer='Mme Benali';
+  const data=[
+   ['fr-FR','Bonjour à tous, aujourd\'hui nous allons découvrir la gestion de projet agile avec Scrum.'],
+   ['fr-FR','La méthode Scrum organise le travail en sprints de deux à quatre semaines.'],
+   ['fr-FR','C\'est très important : chaque sprint commence par une réunion de planification du sprint.'],
+   ['ar-MA','دابا غادي نشوفو الأدوار ديال الفريق، ردو البال لهاد النقطة حيت مهمة بزاف'],
+   ['ar-MA','الـ Product Owner هو اللي كيحدد الأولويات ديال المنتوج'],
+   ['en-US','Look at this diagram, it shows the complete Scrum cycle from backlog to increment.'],
+   ['en-US','The daily stand-up should never last more than fifteen minutes.'],
+   ['fr-FR','Regardez le tableau : voici les trois artefacts, le backlog produit, le backlog de sprint et l\'incrément.'],
+   ['fr-FR','Retenez bien que le backlog produit est priorisé par le Product Owner.'],
+   ['fr-FR','La rétrospective permet à l\'équipe d\'améliorer sa façon de travailler après chaque sprint.'],
+   ['fr-FR','Le Scrum Master aide l\'équipe à lever les obstacles et à respecter le cadre Scrum.'],
+   ['ar-SA','يجب على كل فريق أن يحدد تعريف الإنجاز قبل بداية السبرينت'],
+   ['fr-FR','Nous verrons aussi comment estimer les tâches du backlog avec les points de complexité.'],
+   ['en-US','Remember, the sprint review is about the product increment, not about reporting to managers.'],
+   ['fr-FR','Pour la prochaine séance, vous devez préparer un backlog produit pour votre projet.'],
+   ['fr-FR','En conclusion, Scrum repose sur la transparence, l\'inspection et l\'adaptation de l\'équipe.']
+  ];
+  data.forEach((d,i)=>addSegment(d[1],d[0],i*150000+20000,true));
+  s.elapsed=data.length*150000;s.notes.push({id:uid('n'),t:700000,text:'Demander un modèle de backlog pour notre service.'});
+  save();refreshAll();showTab('summary');$('#genBtn').click();toast('Exemple chargé : voici le résumé généré');
+}
+$('#sampleBtn').onclick=loadSample;
+
+/* ---------- navigation ---------- */
+function showTab(name){
+  document.querySelectorAll('.tabs [role=tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===name));
+  ['listen','notes','summary','sessions'].forEach(n=>$('#tab-'+n).hidden=n!==name);
+  if(name==='notes')renderNotes();if(name==='sessions')renderSessions();
+  if(name==='summary'){$('#trainer').value=cur().trainer||''}
+}
+document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b)showTab(b.dataset.tab)});
+$('#recBtn').onclick=()=>recording?stopRecording():startRecording();
+$('#title').addEventListener('input',e=>{cur().title=e.target.value;save()});
+$('#trainer').addEventListener('input',e=>{cur().trainer=e.target.value;save()});
+
+function showWarn(msg){const w=$('#support');w.textContent=msg;w.hidden=false}
+const noSupportMsg='Ce navigateur ne propose pas la reconnaissance vocale. Ouvrez cette page dans Chrome ou Edge (ordinateur ou Android) ou dans Safari récent sur iPhone. Vous pouvez quand même prendre des notes, des photos et coller une transcription dans Séances.';
+function refreshAll(){
+  const s=cur();$('#title').value=s.title||'';$('#trainer').value=s.trainer||'';
+  lastReport=null;$('#report').innerHTML='';$('#copyBtn').hidden=$('#printBtn').hidden=true;
+  renderLangs();renderTranscript();renderNotes();renderSessions();updateRecUI();
+}
+if(!SR)showWarn(noSupportMsg);
+refreshAll();
+})();
+</script>
+</body>
+</html>
